@@ -1,7 +1,9 @@
 # Entornos virtuales
 venv/
-/.venv/
-env/
+./.venv/
+me-verifer/.env/
+me-verifer/env/
+.env
 
 # Carpetas de datos a ignorar (fotos recortadas / privadas)
 me-verifer/data/me/
