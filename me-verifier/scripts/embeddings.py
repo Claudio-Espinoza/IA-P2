@@ -9,21 +9,23 @@ from logger import setup_logger
 
 logger = setup_logger(__name__)
 
+
 def load_model(model_name="Facenet"):
     try:
-        logger.info(f"Loading face recognition model: {model_name}...")
+        logger.info(f"Cargando modelo de reconocimiento facial: {model_name}...")
         DeepFace.build_model(model_name)
-        logger.info(f"Model loaded successfully: {model_name}")
+        logger.info(f"Modelo cargado exitosamente: {model_name}")
         return True
     except Exception as e:
-        logger.error(f"Failed to load model {model_name}: {e}")
+        logger.error(f"Error al cargar el modelo {model_name}: {e}")
         return False
+
 
 def extract_embedding_from_image(img_file, model_name):
     try:
         img = cv2.imread(str(img_file))
         if img is None:
-            logger.warning(f"Could not read image: {img_file}")
+            logger.warning(f"No se pudo leer la imagen: {img_file}")
             return None
         
         result = DeepFace.represent(img, 
@@ -31,22 +33,23 @@ def extract_embedding_from_image(img_file, model_name):
                                     enforce_detection=False)
         
         embedding = result[0]['embedding']
-        logger.debug(f"Embedding extracted from: {img_file}")
+        logger.debug(f"Embedding extraído de: {img_file}")
         return embedding
     except Exception as e:
-        logger.error(f"Error extracting embedding from {img_file}: {e}")
+        logger.error(f"Error al extraer embedding de {img_file}: {e}")
         return None
+
 
 def process_label_directory(label_dir, label_value, model_name):
     embeddings = []
     labels = []
     
     if not label_dir.exists():
-        logger.warning(f"Directory does not exist: {label_dir}")
+        logger.warning(f"El directorio no existe: {label_dir}")
         return embeddings, labels
     
     label_name = label_dir.name
-    logger.info(f"Processing '{label_name}' images from: {label_dir}")
+    logger.info(f"Procesando imágenes de '{label_name}' desde: {label_dir}")
     
     count = 0
     failed = 0
@@ -61,13 +64,14 @@ def process_label_directory(label_dir, label_value, model_name):
         else:
             failed += 1
     
-    logger.info(f"Processed '{label_name}': {count} images extracted, {failed} failed")
+    logger.info(f"Procesadas imágenes de '{label_name}': {count} extraídos, {failed} fallidos")
     return embeddings, labels
+
 
 def save_embeddings(embeddings, labels, output_file):
     try:
         if not embeddings:
-            logger.warning("No embeddings to save")
+            logger.warning("No hay embeddings para guardar")
             return False
         
         output_path = Path(output_file)
@@ -77,29 +81,30 @@ def save_embeddings(embeddings, labels, output_file):
                  embeddings=np.array(embeddings),
                  labels=np.array(labels))
         
-        logger.info(f"Embeddings saved successfully to: {output_file}")
-        logger.info(f"Total embeddings: {len(embeddings)}")
-        logger.info(f"Positive (me): {sum(np.array(labels) == 1)}")
-        logger.info(f"Negative (not_me): {sum(np.array(labels) == 0)}")
+        logger.info(f"Embeddings guardados exitosamente en: {output_file}")
+        logger.info(f"Total de embeddings: {len(embeddings)}")
+        logger.info(f"Positivos (yo): {sum(np.array(labels) == 1)}")
+        logger.info(f"Negativos (no yo): {sum(np.array(labels) == 0)}")
         return True
     except Exception as e:
-        logger.error(f"Failed to save embeddings to {output_file}: {e}")
+        logger.error(f"Error al guardar embeddings en {output_file}: {e}")
         return False
 
+
 def extract_embeddings(cropped_dir, output_file='embeddings.npz'):
-    logger.info("Starting embedding extraction...")
+    logger.info("Iniciando extracción de embeddings...")
     try:
         model_name = "Facenet"
         
         if not load_model(model_name):
-            logger.error("Failed to initialize model. Aborting.")
+            logger.error("Error al inicializar el modelo. Abortando.")
             return
         
         embeddings = []
         labels = []
         
         cropped_path = Path(cropped_dir)
-        logger.info(f"Input directory: {cropped_path}")
+        logger.info(f"Directorio de entrada: {cropped_path}")
         
         me_dir = cropped_path / 'me'
         me_embeddings, me_labels = process_label_directory(me_dir, 1, model_name)
@@ -112,15 +117,15 @@ def extract_embeddings(cropped_dir, output_file='embeddings.npz'):
         labels.extend(not_me_labels)
         
         save_embeddings(embeddings, labels, output_file)
-        logger.info("Embedding extraction completed successfully")
+        logger.info("Extracción de embeddings completada exitosamente")
         
     except Exception as e:
-        logger.error(f"Embedding extraction failed: {e}")
+        logger.error(f"Error en la extracción de embeddings: {e}")
         raise
 
 
 if __name__ == '__main__':
-    logger.info("Starting embedding extraction script")
+    logger.info("Iniciando script de extracción de embeddings")
     
     try:
         base_dir = Path(__file__).parent.parent
@@ -128,7 +133,7 @@ if __name__ == '__main__':
         output_path = data_dir / 'embeddings.npz'
         
         extract_embeddings(data_dir / 'cropped', output_file=output_path)
-        logger.info("Script completed successfully")
+        logger.info("Script completado exitosamente")
     except Exception as e:
-        logger.error(f"Script failed: {e}")
+        logger.error(f"Error en el script: {e}")
         raise
