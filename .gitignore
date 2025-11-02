@@ -1,11 +1,12 @@
 # Entornos virtuales
 venv/
-.venv/
+/.venv/
 env/
 
 # Carpetas de datos a ignorar (fotos recortadas / privadas)
-data/me/
-data/cropped/
+me-verifer/data/me/
+me-verifer/data/cropped/
+me-verifer/data/not_me
 
 # Archivos compilados / caché de Python
 __pycache__/
