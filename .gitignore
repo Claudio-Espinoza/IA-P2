@@ -8,7 +8,7 @@ me-verifer/env/
 # Carpetas de datos a ignorar (fotos recortadas / privadas)
 me-verifer/data/me/
 me-verifer/data/cropped/
-me-verifer/data/not_me
+me-verifer/data/not_me/
 
 # Archivos compilados / caché de Python
 __pycache__/

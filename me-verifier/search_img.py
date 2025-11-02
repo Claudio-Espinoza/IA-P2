@@ -31,6 +31,7 @@ def definePath():
     base_dir = os.path.join(os.path.dirname(__file__), 'data', 'not_me')
     return base_dir
 
+
 if __name__ == '__main__':
     output_dir = definePath()
     os.makedirs(output_dir, exist_ok=True)
