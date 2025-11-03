@@ -7,16 +7,22 @@ Sistema de verificación facial basado en Machine Learning para identificar si u
 ```
 me-verifier/
 ├── api/
-│   └── app.py              # Flask API (/healthz, /verify)
+│   ├── __init__.py
+│   ├── app.py              # Flask API (/healthz, /verify)
+│   ├── config.py           # Configuración de la API
+│   └── init.py             # Inicialización de la API
 ├── models/
 │   ├── model.joblib        # Modelo entrenado
 │   └── scaler.joblib       # Escalador de features
 ├── data/
 │   ├── me/                 # Fotos de "yo" (crudas)
 │   ├── not_me/             # Fotos de otras personas
+│   ├── embeddings.npz      # Embeddings faciales
+│   ├── test_data.npz       # Datos de prueba
 │   └── cropped/            # Rostros recortados
 │       ├── me/
 │       └── not_me/
+├── logs/                   # Logs del sistema
 ├── scripts/
 │   ├── crop_faces.py       # Detección y recorte de rostros
 │   ├── embeddings.py       # Extracción de embeddings
@@ -26,7 +32,12 @@ me-verifier/
 │   └── confusion_matrix.png
 ├── train.py                # Entrenamiento del modelo
 ├── evaluate.py             # Evaluación y reportes
-├── tests/test_api.py       # Tests de la API
+├── search_img.py           # Búsqueda de imágenes
+├── setup.py                # Inicialización del proyecto
+├── logger.py               # Utilidades de logging
+├── tests/
+│   └── test_api.py         # Tests de la API
+├── .env                    # Variables de entorno
 ├── .env.example
 ├── README.md
 └── requirements.txt
