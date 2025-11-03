@@ -82,64 +82,10 @@ Los reportes se guardarán en `reports/`.
 
 #### Desarrollo
 ```bash
-python api/app.py
+# Todo esto debe ser dentro de me-verifier
+# Si no quiere seguir los pasos anteirores puede usar este comando
+python setup.py
+
+# COmando para ejecutar
+python -m api.app
 ```
-
-#### Producción
-```bash
-chmod +x scripts/run_gunicorn.sh
-./scripts/run_gunicorn.sh
-```
-
-## API Endpoints
-
-### GET /healthz
-Health check del servicio.
-
-**Response:**
-```json
-{
-  "status": "healthy",
-  "model_loaded": true,
-  "scaler_loaded": true
-}
-```
-
-### POST /verify
-Verifica si la imagen contiene a la persona objetivo.
-
-**Request:**
-- Content-Type: multipart/form-data
-- Body: image file
-
-**Response:**
-```json
-{
-  "is_me": true,
-  "confidence": 0.95
-}
-```
-
-## Testing
-
-```bash
-pytest tests/
-```
-
-## Dependencias Principales
-
-- Flask: API web
-- scikit-learn: Machine learning
-- OpenCV: Procesamiento de imágenes
-- joblib: Serialización de modelos
-- gunicorn: Servidor WSGI de producción
-
-## Notas
-
-- Los modelos pre-entrenados (FaceNet, VGGFace) deben configurarse en `scripts/embeddings.py`
-- Se recomienda tener al menos 50 imágenes por clase para un buen rendimiento
-- El modelo usa SVM con kernel RBF por defecto, pero puede cambiarse en `train.py`
-
-## Licencia
-
-MIT
