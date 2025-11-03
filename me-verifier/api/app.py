@@ -10,7 +10,7 @@ from deepface import DeepFace
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from logger import setup_logger
-from api.init import model_loader
+from api.init import model_loader, setup_manager
 from api.config import (
     THRESHOLD, MAX_SIZE_MB, ALLOWED_EXTENSIONS, 
     FACENET_MODEL, DEBUG, HOST, PORT, API_VERSION, API_NAME
@@ -21,6 +21,48 @@ logger = setup_logger(__name__)
 app = Flask(__name__)
 
 
+def initialize_app():
+    """Inicializa la aplicación - ejecuta setup si es necesario"""
+    logger.info("=" * 60)
+    logger.info("🚀 INICIANDO ME VERIFIER API")
+    logger.info("=" * 60)
+    
+    # Verificar si el modelo ya está entrenado
+    models_dir = Path(__file__).parent.parent / 'models'
+    model_file = models_dir / 'model.joblib'
+    scaler_file = models_dir / 'scaler.joblib'
+    
+    if model_file.exists() and scaler_file.exists():
+        logger.info("✅ Modelo y escalador encontrados")
+        logger.info("Cargando recursos...")
+        
+        if model_loader.load_all():
+            logger.info("✅ API lista para usar")
+            return True
+        else:
+            logger.warning("⚠️ Error al cargar recursos")
+            return False
+    else:
+        logger.warning("❌ Modelo no encontrado")
+        logger.info("Ejecutando setup automático...")
+        logger.info("")
+        
+        if setup_manager.run_setup(skip_evaluation=False):
+            logger.info("")
+            logger.info("=" * 60)
+            logger.info("Cargando recursos...")
+            
+            if model_loader.load_all():
+                logger.info("✅ API lista para usar")
+                return True
+            else:
+                logger.error("❌ Error al cargar recursos después del setup")
+                return False
+        else:
+            logger.error("❌ Setup falló")
+            return False
+
+
 @app.route('/', methods=['GET'])
 def index():
     logger.debug("Solicitud GET /")
@@ -28,7 +70,7 @@ def index():
     return jsonify({
         'name': API_NAME,
         'version': API_VERSION,
-        'status': 'running',
+        'status': 'running' if model_loader.is_ready() else 'degraded',
         'endpoints': {
             'info': 'GET /',
             'health': 'GET /healthz',
@@ -60,7 +102,7 @@ def verify():
         logger.error("Solicitud /verify rechazada: recursos no cargados")
         return jsonify({
             'error': 'Model not loaded',
-            'message': 'Por favor ejecuta: python train.py'
+            'message': 'Por favor reinicia la API'
         }), 503
     
     if 'image' not in request.files:
@@ -90,7 +132,6 @@ def verify():
         img_bytes = file.read()
         logger.debug(f"Imagen recibida: {len(img_bytes)} bytes")
         
-        # Validar tamaño
         if len(img_bytes) > MAX_SIZE_MB * 1024 * 1024:
             logger.warning(f"Imagen demasiado grande: {len(img_bytes)} bytes")
             return jsonify({
@@ -106,6 +147,7 @@ def verify():
         
         logger.debug(f"Imagen decodificada: {img.shape}")
         
+        # Extraer embedding facial
         try:
             logger.debug(f"Extrayendo embedding con modelo: {FACENET_MODEL}")
             embeddings_objs = DeepFace.represent(
@@ -178,21 +220,19 @@ def internal_error(error):
     logger.error(f"Error interno: {error}")
     return jsonify({'error': 'Internal server error'}), 500
 
+
 if __name__ == '__main__':
-    logger.info("=" * 60)
-    
-    if not model_loader.load_all():
-        logger.error("No se pudieron cargar los recursos.")
-        logger.error("Continuando en modo degradado...")
-    
-    logger.info(f"Estado de recursos: {model_loader.get_status()}")
-    logger.info("=" * 60)
-    logger.info("📍 Endpoints disponibles:")
-    logger.info("   - GET  / (información)")
-    logger.info("   - GET  /healthz (estado)")
-    logger.info("   - POST /verify (verificación)")
-    logger.info("=" * 60)
-    logger.info(f"Servidor iniciado en http://{HOST}:{PORT}")
-    logger.info("=" * 60)
-    
-    app.run(host=HOST, port=PORT, debug=DEBUG)
+    if initialize_app():
+        logger.info("=" * 60)
+        logger.info("📍 Endpoints disponibles:")
+        logger.info("   - GET  / (información)")
+        logger.info("   - GET  /healthz (estado)")
+        logger.info("   - POST /verify (verificación)")
+        logger.info("=" * 60)
+        logger.info(f"🚀 Servidor iniciado en http://{HOST}:{PORT}")
+        logger.info("=" * 60)
+        
+        app.run(host=HOST, port=PORT, debug=DEBUG)
+    else:
+        logger.error("❌ No se pudo inicializar la aplicación")
+        sys.exit(1)
