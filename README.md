@@ -38,7 +38,6 @@ me-verifier/
 ├── tests/
 │   └── test_api.py         # Tests de la API
 ├── .env                    # Variables de entorno
-├── .env.example
 ├── README.md
 └── requirements.txt
 ```
